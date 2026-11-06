@@ -18,7 +18,50 @@
 
   var FIELDS = ["id", "name", "email", "department", "role"];
 
+  // On localhost the Python server stores data in employees.xlsx.
+  // On any other host (e.g. Vercel static hosting) there is no API, so the
+  // app falls back to browser localStorage.
+  var useLocal = false;
+  var STORAGE_KEY = "employees";
+  var SEED = [
+    { id: "E001", name: "Aarav Sharma", email: "aarav.sharma@example.com", department: "Engineering", role: "Software Engineer" },
+    { id: "E002", name: "Priya Reddy", email: "priya.reddy@example.com", department: "HR", role: "HR Manager" },
+    { id: "E003", name: "John Smith", email: "john.smith@example.com", department: "Finance", role: "Accountant" },
+    { id: "E004", name: "Meera Iyer", email: "meera.iyer@example.com", department: "Design", role: "UX Designer" }
+  ];
+
+  function isLocalhost() {
+    return location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  }
+
+  function localRequest(method, url, data) {
+    var list;
+    try { list = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { list = null; }
+    if (!list) list = SEED.slice();
+    var id = decodeURIComponent(url.split("/")[3] || "");
+    var result;
+
+    if (method === "POST") {
+      if (list.some(function (e) { return e.id.toLowerCase() === data.id.toLowerCase(); })) {
+        return Promise.reject(new Error("This ID already exists."));
+      }
+      list.push(data);
+      result = data;
+    } else if (method === "PUT") {
+      list = list.map(function (e) { return e.id === id ? data : e; });
+      result = data;
+    } else if (method === "DELETE") {
+      list = list.filter(function (e) { return e.id !== id; });
+      result = { deleted: id };
+    } else {
+      result = list;
+    }
+    if (method !== "GET") localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    return Promise.resolve(result);
+  }
+
   function request(method, url, data) {
+    if (useLocal) return localRequest(method, url, data);
     var opts = { method: method, headers: { "Content-Type": "application/json" } };
     if (data) opts.body = JSON.stringify(data);
     return fetch(url, opts).then(function (res) {
@@ -34,6 +77,10 @@
       employees = list;
       render();
     }).catch(function (err) {
+      if (!useLocal && !isLocalhost()) {
+        useLocal = true;
+        return refresh();
+      }
       emptyMsg.hidden = false;
       emptyMsg.textContent = "Could not load employees: " + err.message + " (run serve_https.py and open https://localhost:8443)";
     });
