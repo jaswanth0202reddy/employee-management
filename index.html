@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Employee Management</h1>
+    <button id="addBtn" class="btn btn-primary" type="button">+ Add Employee</button>
+  </header>
+
+  <main class="container">
+    <div class="toolbar">
+      <input id="searchInput" type="search" placeholder="Search by name or ID..." aria-label="Search employees">
+      <span id="countLabel" class="muted"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Role</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="employeeBody"></tbody>
+      </table>
+      <p id="emptyMsg" class="empty" hidden>No employees found.</p>
+    </div>
+  </main>
+
+  <!-- Add / Edit dialog -->
+  <dialog id="formDialog">
+    <form id="employeeForm" novalidate>
+      <h2 id="formTitle">Add Employee</h2>
+
+      <label>Employee ID
+        <input id="empId" name="id" type="text" required maxlength="20">
+        <small class="error" data-for="id"></small>
+      </label>
+      <label>Name
+        <input id="empName" name="name" type="text" required maxlength="60">
+        <small class="error" data-for="name"></small>
+      </label>
+      <label>Email
+        <input id="empEmail" name="email" type="email" required>
+        <small class="error" data-for="email"></small>
+      </label>
+      <label>Department
+        <input id="empDept" name="department" type="text" required maxlength="40">
+        <small class="error" data-for="department"></small>
+      </label>
+      <label>Role
+        <input id="empRole" name="role" type="text" required maxlength="40">
+        <small class="error" data-for="role"></small>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" id="cancelBtn" class="btn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Delete confirmation dialog -->
+  <dialog id="deleteDialog">
+    <h2>Delete Employee</h2>
+    <p id="deleteMsg"></p>
+    <div class="dialog-actions">
+      <button type="button" id="deleteCancel" class="btn">Cancel</button>
+      <button type="button" id="deleteConfirm" class="btn btn-danger">Delete</button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
