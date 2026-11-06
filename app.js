@@ -43,11 +43,17 @@
 
     if (method === "POST") {
       if (list.some(function (e) { return e.id.toLowerCase() === data.id.toLowerCase(); })) {
-        return Promise.reject(new Error("This ID already exists."));
+        return Promise.reject(fieldError("id", "This ID already exists."));
+      }
+      if (list.some(function (e) { return e.email.toLowerCase() === data.email.toLowerCase(); })) {
+        return Promise.reject(fieldError("email", "This email already exists."));
       }
       list.push(data);
       result = data;
     } else if (method === "PUT") {
+      if (list.some(function (e) { return e.id !== id && e.email.toLowerCase() === data.email.toLowerCase(); })) {
+        return Promise.reject(fieldError("email", "This email already exists."));
+      }
       list = list.map(function (e) { return e.id === id ? data : e; });
       result = data;
     } else if (method === "DELETE") {
@@ -60,13 +66,19 @@
     return Promise.resolve(result);
   }
 
+  function fieldError(field, message) {
+    var err = new Error(message);
+    err.field = field;
+    return err;
+  }
+
   function request(method, url, data) {
     if (useLocal) return localRequest(method, url, data);
     var opts = { method: method, headers: { "Content-Type": "application/json" } };
     if (data) opts.body = JSON.stringify(data);
     return fetch(url, opts).then(function (res) {
       return res.json().then(function (json) {
-        if (!res.ok) throw new Error(json.error || "Request failed.");
+        if (!res.ok) throw fieldError(json.field, json.error || "Request failed.");
         return json;
       });
     });
@@ -160,6 +172,12 @@
       var dup = employees.some(function (e) { return e.id.toLowerCase() === data.id.toLowerCase(); });
       if (dup) { setError("id", "This ID already exists."); ok = false; }
     }
+    if (data.email) {
+      var emailDup = employees.some(function (e) {
+        return e.id !== data.id && e.email.toLowerCase() === data.email.toLowerCase();
+      });
+      if (emailDup) { setError("email", "This email already exists."); ok = false; }
+    }
     return ok;
   }
 
@@ -180,7 +198,7 @@
       formDialog.close();
       return refresh();
     }).catch(function (err) {
-      setError(editingId ? "name" : "id", err.message);
+      setError(err.field || (editingId ? "name" : "id"), err.message);
     });
   });
 

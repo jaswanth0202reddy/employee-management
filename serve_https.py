@@ -94,7 +94,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         with lock:
             employees = read_all()
             if any(e["id"].lower() == emp["id"].lower() for e in employees):
-                return self.send_json(409, {"error": "This ID already exists."})
+                return self.send_json(409, {"error": "This ID already exists.", "field": "id"})
+            if any(e["email"].lower() == emp["email"].lower() for e in employees):
+                return self.send_json(409, {"error": "This email already exists.", "field": "email"})
             employees.append(emp)
             write_all(employees)
         self.send_json(201, emp)
@@ -111,6 +113,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             employees = read_all()
             if not any(e["id"] == eid for e in employees):
                 return self.send_json(404, {"error": "Employee not found."})
+            if any(e["id"] != eid and e["email"].lower() == emp["email"].lower() for e in employees):
+                return self.send_json(409, {"error": "This email already exists.", "field": "email"})
             write_all([emp if e["id"] == eid else e for e in employees])
         self.send_json(200, emp)
 
